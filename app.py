@@ -126,9 +126,6 @@ def cari_dengan_ekspansi(query_tokens, top_n=10):
         hasil.append(doc_to_dict(paper[i], i, info["skor"], info["query_used"]))
     return hasil
 
-
-# ── ROUTES ──
-
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -177,7 +174,6 @@ def info():
         "status"         : "siap" if vectorizer is not None else "belum dimuat"
     })
 
-
+muat_data()
 if __name__ == "__main__":
-    muat_data()
     app.run(debug=False)
