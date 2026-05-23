@@ -135,39 +135,39 @@ def index():
 
 @app.route("/cari", methods=["POST"])
 def cari():
-    if vectorizer is None:
-        return jsonify({"error": "Data belum dimuat, cek pickle files."}), 500
+    try:
+        if vectorizer is None:
+            return jsonify({"error": "Data belum dimuat, cek pickle files."}), 500
 
-    data     = request.get_json()
-    query    = data.get("query", "").strip()
-    ekspansi = data.get("ekspansi", False)
-    semua    = data.get("semua", False)
+        data     = request.get_json()
+        query    = data.get("query", "").strip()
+        ekspansi = data.get("ekspansi", False)
+        semua    = data.get("semua", False)
 
-    if isinstance(semua, str):
-        semua = semua.lower() == "true"
+        if isinstance(semua, str):
+            semua = semua.lower() == "true"
 
-    print(f"[DEBUG] query='{query}' | ekspansi={ekspansi} | semua={semua}")
+        if semua:
+            hasil = []
+            for i, doc in enumerate(paper):
+                hasil.append(doc_to_dict(doc, i))
+            return jsonify({"query": "", "ekspansi": False, "jumlah": len(hasil), "hasil": hasil})
 
-    if semua:
-        hasil = []
-        for i, doc in enumerate(paper):
-            hasil.append(doc_to_dict(doc, i))
-        print(f"[DEBUG] Mengirim {len(hasil)} dokumen")
-        print(f"[DEBUG] Contoh dokumen pertama: {hasil[0]}") 
+        if not query:
+            return jsonify({"query": "", "ekspansi": False, "jumlah": 0, "hasil": []})
 
-        return jsonify({"query": "", "ekspansi": False, "jumlah": len(hasil), "hasil": hasil})
+        tokens = preprocess_query(query)
+        if ekspansi and thesaurus:
+            hasil = cari_dengan_ekspansi(tokens, top_n=10)
+        else:
+            hasil = cari_tanpa_ekspansi(tokens, top_n=10)
 
-    if not query:
-        return jsonify({"query": "", "ekspansi": False, "jumlah": 0, "hasil": []})
+        return jsonify({"query": query, "ekspansi": ekspansi, "jumlah": len(hasil), "hasil": hasil})
 
-    tokens = preprocess_query(query)
-    if ekspansi and thesaurus:
-        hasil = cari_dengan_ekspansi(tokens, top_n=10)
-    else:
-        hasil = cari_tanpa_ekspansi(tokens, top_n=10)
-
-    return jsonify({"query": query, "ekspansi": ekspansi, "jumlah": len(hasil), "hasil": hasil})
-
+    except Exception as e:
+        import traceback
+        return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
+    
 @app.route("/info", methods=["GET"])
 def info():
     return jsonify({
