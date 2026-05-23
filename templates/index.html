@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CariCeri — Pencarian Berita</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #f7f3ee;
+      --surface: #ffffff;
+      --border: #e5ddd2;
+      --accent: #c84b2f;
+      --accent2: #e8763c;
+      --text: #1a120a;
+      --muted: #8a7060;
+      --tag-bg: #fceee8;
+      --tag-color: #c84b2f;
+      --hero-bg: #1a120a;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    nav {
+      background: var(--hero-bg);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 0px;
+      text-decoration: none;
+    }
+
+    .nav-brand img {
+      width: 110px;
+      height: 110px;
+      object-fit: contain;
+      margin-right: -30px;
+    }
+
+    .nav-brand-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-brand-text span {
+      color: var(--accent2);
+    }
+
+    .hero {
+      background: var(--hero-bg);
+      padding: 3rem 2rem 3.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 60% 0%, #c84b2f22 0%, transparent 60%),
+        radial-gradient(ellipse at 10% 100%, #e8763c18 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 0.4rem;
+      position: relative;
+    }
+
+    .hero p {
+      font-size: 14px;
+      color: #b8a898;
+      margin-bottom: 2rem;
+      position: relative;
+    }
+
+    .search-wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 0;
+      background: #fff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 32px rgba(0, 0, 0, 0.35);
+    }
+
+    .search-bar input {
+      flex: 1;
+      height: 52px;
+      padding: 0 20px;
+      border: none;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+      background: transparent;
+      outline: none;
+    }
+
+    .search-bar input::placeholder {
+      color: #bbb;
+    }
+
+    .search-bar button {
+      height: 52px;
+      padding: 0 28px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .search-bar button:hover {
+      background: #b03a20;
+    }
+
+    .search-bar button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 2rem 4rem;
+    }
+
+    .section-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    #resultsStatus {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 1.4rem;
+      display: none;
+    }
+
+    #resultsStatus strong {
+      color: var(--accent);
+    }
+
+    .news-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .news-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+      animation: fadeUp 0.4s ease both;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .news-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 28px rgba(200, 75, 47, 0.1);
+      border-color: var(--accent2);
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card-body {
+      padding: 1.1rem 1.25rem 1rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .card-tag {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 3px 9px;
+      border-radius: 99px;
+      background: var(--tag-bg);
+      color: var(--tag-color);
+    }
+
+    .card-date {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.5;
+      color: var(--text);
+      margin-bottom: 8px;
+      text-decoration: none;
+      display: block;
+      transition: color 0.15s;
+    }
+
+    .card-title:hover {
+      color: var(--accent);
+    }
+
+    .card-preview {
+      font-size: 12.5px;
+      color: var(--muted);
+      line-height: 1.7;
+      flex: 1;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-footer {
+      padding: 0.75rem 1.25rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-link {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .card-link:hover {
+      text-decoration: underline;
+    }
+
+    .skor-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      display: none;
+    }
+
+    .skor-badge.visible {
+      display: block;
+    }
+
+    .state-box {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.8;
+      grid-column: 1 / -1;
+    }
+
+    .state-box .icon {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .loading-dots span {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin: 0 3px;
+      animation: bounce 1.2s infinite;
+    }
+
+    .loading-dots span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .loading-dots span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes bounce {
+
+      0%,
+      80%,
+      100% {
+        transform: translateY(0);
+        opacity: 0.4;
+      }
+
+      40% {
+        transform: translateY(-8px);
+        opacity: 1;
+      }
+    }
+
+    .error-msg {
+      color: #c84b2f;
+      background: #fdf0ee;
+      border: 1.5px solid #f0c8c0;
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      font-size: 14px;
+      grid-column: 1 / -1;
+    }
+
+    @media (max-width: 600px) {
+      .hero {
+        padding: 2rem 1.2rem 2.5rem;
+      }
+
+      .main {
+        padding: 1.5rem 1.2rem 3rem;
+      }
+
+      .news-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <a class="nav-brand" href="/">
+      <img src="/static/logo.png" alt="CariCeri Logo" onerror="this.style.display='none'" />
+      <span class="nav-brand-text">Cari<span>Ceri</span></span>
+    </a>
+  </nav>
+
+  <div class="hero">
+    <h1>Cari Berita Terkini</h1>
+    <p>Masukkan kata kunci untuk mencari dokumen berita yang relevan</p>
+    <div class="search-wrap">
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Masukkan kata kunci berita..." />
+        <button id="searchBtn" onclick="doSearch()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          Cari
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div id="resultsStatus"></div>
+    <div class="section-label" id="sectionLabel">Semua Berita</div>
+    <div class="news-grid" id="newsList">
+      <div class="state-box">
+        <div class="loading-dots"><span></span><span></span><span></span></div>
+        <div style="margin-top:14px">Memuat berita...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      muatSemuaBerita()
+    })
+
+    async function muatSemuaBerita() {
+      try {
+        const res = await fetch('/cari', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: '', ekspansi: false, semua: true })
+        })
+        const data = await res.json()
+        console.log('[DEBUG] data diterima:', data)
+        if (data.hasil && data.hasil.length > 0) {
+          tampilkanKartu(data.hasil, false)
+        } else {
+          document.getElementById('newsList').innerHTML =
+            `<div class="state-box"><span class="icon">📭</span>Tidak ada berita tersedia.</div>`
+        }
+      } catch (err) {
+        console.error('[ERROR]', err)
+        document.getElementById('newsList').innerHTML =
+          `<div class="error-msg">Error: ${err.message}</div>`
+      }
+    }
+
+    async function doSearch() {
+      const input = document.getElementById('searchInput')
+      const btn = document.getElementById('searchBtn')
+      const query = input.value.trim()
+
+      if (!query) { input.focus(); return }
+
+      btn.disabled = true
+      btn.innerHTML = `<span style="display:flex;align-items:center;gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Mencari...
+      </span>`
+
+      gantiLabel('loading')
+
+      try {
+        const res = await fetch('/cari', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query, ekspansi: false })
+        })
+        const data = await res.json()
+
+        if (!res.ok) {
+          gantiLabel('error', data.error || 'Terjadi kesalahan')
+          return
+        }
+
+        tampilkanKartu(data.hasil || [], true, query, data.jumlah)
+
+      } catch (err) {
+        gantiLabel('error', 'Tidak dapat terhubung ke server.')
+      } finally {
+        btn.disabled = false
+        btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg> Cari`
+      }
+    }
+
+    function tampilkanKartu(hasil, isSearch, query = '', jumlah = 0) {
+      const list = document.getElementById('newsList')
+      const status = document.getElementById('resultsStatus')
+      const label = document.getElementById('sectionLabel')
+
+      if (isSearch) {
+        label.textContent = `Hasil Pencarian`
+        status.style.display = 'block'
+        status.innerHTML = jumlah > 0
+          ? `Ditemukan <strong>${jumlah} dokumen</strong> relevan untuk "<strong>${query}</strong>"`
+          : `Tidak ada hasil untuk "<strong>${query}</strong>"`
+      } else {
+        label.textContent = 'Semua Berita'
+        status.style.display = 'none'
+      }
+
+      if (!hasil || hasil.length === 0) {
+        list.innerHTML = `
+          <div class="state-box">
+            <span class="icon">🔍</span>
+            Tidak ada dokumen yang cocok.<br>Coba kata kunci lain.
+          </div>`
+        return
+      }
+
+      list.innerHTML = hasil.map((d, i) => {
+        const skorBadge = isSearch
+          ? `<span class="skor-badge visible">Skor: ${d.skor}</span>`
+          : ''
+        return `
+          <div class="news-card" style="animation-delay:${i * 0.04}s">
+            <div class="card-body">
+              <div class="card-meta">
+                <span class="card-tag">Berita</span>
+                <span class="card-date">${d.tanggal || ''}</span>
+              </div>
+              <a class="card-title" href="${d.link}" target="_blank" rel="noopener">${d.judul}</a>
+              <p class="card-preview">${d.preview}</p>
+            </div>
+            <div class="card-footer">
+              <a class="card-link" href="${d.link}" target="_blank" rel="noopener">Baca selengkapnya</a>
+              ${skorBadge}
+            </div>
+          </div>`
+      }).join('')
+    }
+
+    function gantiLabel(state, msg = '') {
+      const list = document.getElementById('newsList')
+      if (state === 'loading') {
+        list.innerHTML = `
+          <div class="state-box">
+            <div class="loading-dots"><span></span><span></span><span></span></div>
+            <div style="margin-top:14px">Mencari dokumen relevan...</div>
+          </div>`
+      } else if (state === 'error') {
+        list.innerHTML = `<div class="error-msg">${msg}</div>`
+      }
+    }
+
+    document.getElementById('searchInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') doSearch()
+    })
+  </script>
+
+</body>
+
+</html>
